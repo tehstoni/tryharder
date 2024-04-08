@@ -3,4 +3,4 @@
 set SOURCE_FILE=main.cpp
 set OUTPUT_FILE=main.exe
 
-cl /EHsc /O2 %SOURCE_FILE% /Fe%OUTPUT_FILE%
+cl /O2 /Ob2 /Os /Gs- /Zi /EHsc- /GL /Os /GF /Gy /GA %SOURCE_FILE% /Fe%OUTPUT_FILE%
