@@ -138,7 +138,7 @@ void evade() {
 		exit(1);
 	}
     
-    if (!CheckVirtualAllocExNuma()) {
+    if (CheckVirtualAllocExNuma == FALSE) {
         exit(1);
     }
 };
