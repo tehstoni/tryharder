@@ -154,7 +154,6 @@ void evade() {
 
     if (elapsedTime.count() < 1.5)
     {
-        printf("Sleep duration is too short.\n");
         exit(1);
     }
 
