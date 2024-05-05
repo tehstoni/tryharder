@@ -12,3 +12,8 @@ sliver > jobs
  4    mtls   tcp        443                                           
  5    http   tcp        80     sliver (Sliver name: DEVELOPED_BULLET) 
 ```
+
+Linux compile command:
+```bash
+x86_64-w64-mingw32-g++ main.cpp -o tryharder.exe -lwininet -static-libgcc -static-libstdc++
+```
