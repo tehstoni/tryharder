@@ -22,3 +22,7 @@ x86_64-w64-mingw32-g++ main.cpp -o tryharder.exe -lwininet -static-libgcc -stati
 This was intended to be used with sliver, but you can set your infra up to feed whatever shellcode into it and it should* work.
 
 Was able to have the loader ingest Cobalt shellcode just fine. 
+
+
+## Rust Version
+https://github.com/tehstoni/RustHarder
